@@ -1,0 +1,50 @@
+get_config: "Creates a Trainer configuration for text-to-text finetuning."
+type: "Function"
+parameters_or_attributes:
+  None: "No parameters."
+code_description: |
+  `get_config` sets up a sequence-to-sequence training routine using the MTNT
+  dataset. It constructs the dataset through `_make_dataset`, loads the
+  pretrained Gemma checkpoint, applies cross-entropy loss, and configures an
+  evaluator along with a sampler to periodically generate translations.
+relationships:
+  called_by:
+    - kauldron.main when using this config
+  calls:
+    - _make_dataset
+    - gm.nn.Gemma3_4B
+    - gm.ckpts.LoadCheckpoint
+    - kd.losses.SoftmaxCrossEntropyWithIntLabels
+    - optax.adafactor
+    - kd.ckpts.Checkpointer
+    - gm.evals.SamplerEvaluator
+note: |
+  This example trains with a batch size of 32 and sequence length capped at
+  512 tokens. Sampling evaluators generate example translations during training.
+output_example: |
+  The returned Trainer can be run via `kauldron.main` to finetune the model on
+  the MTNT English-French dataset.
+
+_make_dataset: "Constructs the MTNT dataset pipeline for prompting and response generation."
+type: "Function"
+parameters_or_attributes:
+  training: "Selects the dataset split and whether to shuffle." 
+  sampling: "If true, returns a pipeline suited for inference sampling." 
+  batch_size: "Batch size for training or evaluation." 
+  max_length: "Maximum sequence length for padding and truncation." 
+code_description: |
+  The function builds a `kd.data.py.Tfds` pipeline reading MTNT, then uses
+  `gm.data.Seq2SeqTask` to produce tokenized inputs, target sequences, and loss
+  masks. When `sampling` is True, batch size becomes None allowing inference on
+  a single example.
+relationships:
+  called_by:
+    - get_config
+    - gm.evals.SamplerEvaluator
+  calls:
+    - gm.data.Seq2SeqTask
+note: |
+  Approximately 1% of dataset examples exceed 512 tokens and will be truncated.
+output_example: |
+  Returns a pipeline yielding dictionaries with keys `input`, `target`, and
+  `loss_mask` for training or evaluation.

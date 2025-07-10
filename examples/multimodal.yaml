@@ -1,0 +1,53 @@
+get_config: "Returns a Trainer configuration for image captioning with Gemma."
+type: "Function"
+parameters_or_attributes:
+  None: "No parameters."
+code_description: |
+  `get_config` sets up a multimodal training pipeline where images are paired
+  with caption text. It constructs the dataset via `_make_dataset`, configures
+  the Gemma3_4B model to accept both token and image inputs, applies a standard
+  cross-entropy loss, adds an image summary, and defines sampling evaluators for
+  periodic qualitative inspection.
+relationships:
+  called_by:
+    - kauldron.main when using this configuration
+  calls:
+    - _make_dataset
+    - gm.nn.Gemma3_4B
+    - kd.summaries.ShowImages
+    - gm.evals.SamplerEvaluator
+note: |
+  Images are resized to 800x800 pixels and cast to `uint8` before being fed to
+  the model. Training uses Adafactor with a learning rate of 1e-3.
+output_example: |
+  The produced Trainer trains on the ai2dcaption dataset and periodically logs
+  sampled predictions together with input images.
+
+_make_dataset: "Prepares the ai2dcaption dataset pipeline with image and text transformations."
+type: "Function"
+parameters_or_attributes:
+  training: "Whether to use the training or test split."
+  sampling: "Enable a sampling-friendly pipeline without batching."
+  batch_size: "Optional batch size when not sampling."
+  max_length: "Maximum token length for sequence padding."
+code_description: |
+  The dataset pipeline loads ai2dcaption via TensorFlow Datasets, keeps only the
+  image and caption fields, inserts a constant prompt token, applies
+  `gm.data.Seq2SeqTask` to produce model inputs and targets, resizes images, and
+  ensures they are in NHWC format.
+relationships:
+  called_by:
+    - get_config
+    - gm.evals.SamplerEvaluator
+  calls:
+    - kd.data.Elements
+    - gm.data.Seq2SeqTask
+    - kd.data.py.Resize
+    - kd.data.Rearrange
+    - kd.data.Cast
+note: |
+  When `sampling` is True, batch size is set to None and maximum length is not
+  enforced. Images are cast to unsigned 8-bit for compatibility with summaries.
+output_example: |
+  Returns a pipeline yielding dictionaries with `input`, `target`, `loss_mask`,
+  and processed `image` arrays.

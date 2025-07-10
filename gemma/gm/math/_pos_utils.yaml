@@ -1,0 +1,19 @@
+build_positions_from_mask: "Computes position indices for token sequences based on an input mask."
+type: "Function"
+parameters_or_attributes:
+  input_mask: "Boolean array indicating valid (non-padded) token positions."
+code_description: |
+  The function calculates cumulative sums over the `input_mask` to determine
+  absolute positions for tokens. It subtracts one from positions after the first
+  valid token so indexing starts at zero. Padded positions yield arbitrary values
+  but are typically ignored by later computations such as RoPE.
+relationships:
+  called_by:
+    - gemma.gm.math modules requiring positional indices
+  calls:
+    - jax.numpy.cumsum
+note: |
+  `input_mask` must be a JAX array where non-zero entries correspond to real
+  tokens. The returned array matches the input shape.
+output_example: |
+  Passing `jnp.array([[1,1,0]])` returns `jnp.array([[0,1,0]])`.

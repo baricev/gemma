@@ -1,0 +1,19 @@
+module_summary: "Exposes math utilities such as apply_rope for positional embeddings."
+type: "Module"
+parameters_or_attributes:
+  apply_rope: "Imported function from _positional_embeddings for public use."
+code_description: |
+  The `gemma.gm.math` package initialization file re-exports the
+  `apply_rope` function, enabling consumers to import it directly from
+  `gemma.gm.math`. Additional utilities may be added in this namespace.
+relationships:
+  called_by:
+    - External modules importing `gemma.gm.math.apply_rope`
+  calls:
+    - gemma.gm.math._positional_embeddings.apply_rope
+note: |
+  This module currently only exposes positional embedding helpers but serves as
+  a central location for future math utilities.
+output_example: |
+  Users can call `from gemma.gm import math; math.apply_rope(...)` to apply
+  rotary embeddings.
