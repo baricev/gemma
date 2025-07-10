@@ -1,0 +1,49 @@
+get_config: "Defines a Trainer setup for sequence-to-sequence training with parameter sharding."
+type: "Function"
+parameters_or_attributes:
+  None: "No parameters."
+code_description: |
+  Similar to the basic seq2seq example, `get_config` prepares training on the
+  MTNT dataset but enables distributed parameter sharding via
+  `kd.sharding.ShardingStrategy` with FSDP. The rest of the Trainer mirrors the
+  sequence-to-sequence setup.
+relationships:
+  called_by:
+    - kauldron.main when executing this file
+  calls:
+    - _make_dataset
+    - gm.nn.Gemma3_4B
+    - kd.sharding.ShardingStrategy
+    - gm.ckpts.LoadCheckpoint
+    - kd.losses.SoftmaxCrossEntropyWithIntLabels
+    - optax.adafactor
+note: |
+  Use this example when training on multiple devices requiring parameter
+  sharding. The dataset and loss configuration remain the same as `seq2seq.py`.
+output_example: |
+  Running the Trainer distributes the model parameters across devices with FSDP
+  while training on the MTNT dataset.
+
+_make_dataset: "Generates the MTNT dataset pipeline used in the sharded training example."
+type: "Function"
+parameters_or_attributes:
+  training: "Determines split and shuffle." 
+  sampling: "Prepares a sampling-only pipeline." 
+  batch_size: "Optional batch size for training." 
+  max_length: "Max token length used for padding." 
+code_description: |
+  This helper is identical to the one from `seq2seq.py`. It loads MTNT using
+  TensorFlow Datasets and applies `gm.data.Seq2SeqTask` to produce model-ready
+  batches. When sampling, batch size is set to None.
+relationships:
+  called_by:
+    - get_config
+    - gm.evals.SamplerEvaluator
+  calls:
+    - gm.data.Seq2SeqTask
+note: |
+  Examples longer than 512 tokens are truncated. Shuffle is enabled only during
+  training.
+output_example: |
+  Returns a dataset pipeline providing `input`, `target`, and `loss_mask` fields
+  for the Trainer.

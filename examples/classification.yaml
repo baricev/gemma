@@ -1,0 +1,54 @@
+get_config: "Creates a Trainer configuration for finetuning Gemma on a binary classification task."
+type: "Function"
+parameters_or_attributes:
+  None: "No parameters."
+code_description: |
+  `get_config` assembles and returns a `kd.train.Trainer` object configured for
+  binary text classification. It constructs the training dataset via
+  `_make_dataset(training=True)`, defines the Gemma model, loads a pretrained
+  checkpoint, specifies cross-entropy loss and an Adafactor optimizer, sets up a
+  checkpointer, and configures an evaluator for the test split.
+relationships:
+  called_by:
+    - kauldron.main when this config is referenced
+  calls:
+    - _make_dataset
+    - gm.nn.Gemma3_4B
+    - gm.ckpts.LoadCheckpoint
+    - kd.losses.SoftmaxCrossEntropyWithIntLabels
+    - optax.adafactor
+    - kd.ckpts.Checkpointer
+    - kd.evals.Evaluator
+note: |
+  This configuration assumes Kauldron and Gemma packages are installed. The
+  training dataset originates from the GLUE CoLA task and is tokenized using the
+  Gemma3Tokenizer.
+output_example: |
+  The returned `Trainer` can be executed with Kauldron's main runner to begin
+  finetuning, yielding logged metrics such as loss and accuracy every few steps.
+
+_make_dataset: "Builds the GLUE CoLA dataset pipeline for training or evaluation."
+type: "Function"
+parameters_or_attributes:
+  training: "Whether to prepare the training or validation split."
+code_description: |
+  `_make_dataset` constructs a `kd.data.py.Tfds` pipeline loading the GLUE CoLA
+  dataset. It decodes byte strings to text, formats input prompts, tokenizes and
+  pads sequences, maps integer labels to Yes/No tokens, and reshapes labels for
+  loss computation. The tokenizer used is `gm.text.Gemma3Tokenizer`.
+relationships:
+  called_by:
+    - get_config
+  calls:
+    - gm.data.DecodeBytes
+    - gm.data.FormatText
+    - gm.data.Tokenize
+    - gm.data.Pad
+    - gm.data.MapInts
+    - kd.data.Rearrange
+note: |
+  This pipeline expects the GLUE dataset to be available via TensorFlow Datasets
+  and is tailored for a small batch size of eight examples.
+output_example: |
+  Returns a `kd.data.py.Tfds` object yielding batches with keys `sentence` and
+  `label` transformed into token sequences and label tensors ready for training.

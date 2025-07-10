@@ -1,0 +1,23 @@
+test_rope_positional_embeddings: "Verifies the apply_rope function against expected outputs."
+type: "Function"
+parameters_or_attributes:
+  input_embedding_shape: "Shape of the input tensor under test."
+  positions: "Position indices passed to apply_rope."
+  max_wavelength: "Maximum wavelength parameter for rotary embeddings."
+  expected: "Expected numeric output array."
+code_description: |
+  The test constructs an input tensor of ones, applies `gm.math.apply_rope` with
+  the provided parameters, and asserts that the resulting array matches the
+  expected values using NumPy's test utilities.
+relationships:
+  called_by:
+    - pytest during unit testing
+  calls:
+    - gm.math.apply_rope
+    - numpy.testing.assert_array_almost_equal
+note: |
+  This test is parametrized to allow multiple scenarios, although only one case
+  is presently defined.
+output_example: |
+  When executed, pytest reports success if the rotated embeddings align with the
+  expected array.

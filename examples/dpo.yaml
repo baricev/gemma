@@ -1,0 +1,47 @@
+get_config: "Defines a Trainer setup for Direct Preference Optimization using Gemma."
+type: "Function"
+parameters_or_attributes:
+  None: "No parameters."
+code_description: |
+  `get_config` returns a `kd.train.Trainer` configured for preference-based
+  finetuning. The model is wrapped in `gm.nn.AnchoredPolicy` to combine a trainable
+  policy and a frozen reference model. It loads the pretrained checkpoint using
+  `gm.ckpts.AnchoredPolicyLoader` and applies a DPO loss during training. The
+  dataset is built via `_make_dataset(training=True)`.
+relationships:
+  called_by:
+    - kauldron.main when this configuration file is used
+  calls:
+    - _make_dataset
+    - gm.nn.AnchoredPolicy
+    - gm.ckpts.AnchoredPolicyLoader
+    - kd.losses.DpoLoss
+    - optax.adafactor
+    - kd.ckpts.Checkpointer
+note: |
+  This example expects the Argilla distilabel math preference dataset from
+  HuggingFace. Evaluation hooks are present but commented out.
+output_example: |
+  The generated Trainer trains the model to prefer chosen responses over
+  rejected ones, logging DPO loss values.
+
+_make_dataset: "Creates the HuggingFace dataset pipeline for DPO training."
+type: "Function"
+parameters_or_attributes:
+  training: "Whether to shuffle and repeat the dataset."
+code_description: |
+  The function builds a `kd.data.py.HuggingFace` pipeline that loads the
+  `argilla/distilabel-math-preference-dpo` dataset. It selects required fields
+  and applies `gm.data.ContrastiveTask` to produce tokenized inputs, target
+  sequences, and loss masks compatible with DPO training.
+relationships:
+  called_by:
+    - get_config
+  calls:
+    - gm.data.ContrastiveTask
+note: |
+  Maximum sequence length is fixed at 512 tokens, and the dataset batch size is
+  16 examples. Truncation may discard overly long entries.
+output_example: |
+  Returns a dataset pipeline yielding batches with `tokens`, `targets`, and `mask`
+  arrays for contrastive learning.

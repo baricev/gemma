@@ -1,0 +1,27 @@
+apply_rope: "Applies Rotary Positional Embedding transformations to input tensors."
+type: "Function"
+parameters_or_attributes:
+  inputs: "Tensor of shape [B, L, N, H] containing query/key embeddings."
+  positions: "Tensor of shape [B, L] with absolute position indices."
+  base_frequency: "Base frequency controlling sinusoid wavelengths."
+  scale_factor: "Optional scaling factor for position interpolation."
+code_description: |
+  `apply_rope` splits the last dimension of `inputs` into pairs and rotates them
+  according to sinusoidal functions determined by `positions`. It computes a
+  timescale based on `base_frequency` and optionally scales positions to allow
+  extended context lengths. The concatenated rotated halves are returned in the
+  original data type.
+relationships:
+  called_by:
+    - gemma.gm.math modules applying rotary embeddings
+    - gemma.gm.math._positional_embeddings_test.test_rope_positional_embeddings
+  calls:
+    - jax.numpy.sin
+    - jax.numpy.cos
+    - jax.numpy.concatenate
+note: |
+  The head dimension must be even. A ValueError is raised if `scale_factor` is
+  less than 1.0.
+output_example: |
+  Given ones with shape [2,1,2,4] and positions [[1],[0]], the function returns
+  rotated embeddings similar to those asserted in the test module.

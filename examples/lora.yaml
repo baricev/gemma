@@ -1,0 +1,51 @@
+get_config: "Builds a Trainer configuration for LoRA-based Gemma finetuning."
+type: "Function"
+parameters_or_attributes:
+  None: "No parameters."
+code_description: |
+  `get_config` constructs a training configuration applying Low-Rank Adaptation
+  (LoRA) to the Gemma model. The model is wrapped in `gm.nn.LoRA` with rank 4
+  to insert trainable adapters. Initial weights are loaded via
+  `gm.ckpts.SkipLoRA` so only non-LoRA parameters are restored. The optimizer is
+  wrapped with `kd.optim.partial_updates` to update LoRA weights exclusively.
+relationships:
+  called_by:
+    - kauldron.main when using this example
+  calls:
+    - _make_dataset
+    - gm.nn.LoRA
+    - gm.ckpts.SkipLoRA
+    - kd.optim.partial_updates
+    - gm.evals.SamplerEvaluator
+note: |
+  The example builds on the sequence-to-sequence pipeline and limits maximum
+  length to 512 tokens. An additional evaluator samples model outputs on the
+  test set.
+output_example: |
+  The returned Trainer trains only the LoRA layers while leaving the base model
+  frozen and periodically generates example outputs.
+
+_make_dataset: "Creates the MTNT dataset pipeline used for training and evaluation."
+type: "Function"
+parameters_or_attributes:
+  training: "Boolean flag selecting train or test split."
+  sampling: "If true, prepares a pipeline for generation without batching."
+  batch_size: "Batch size when not sampling."
+  max_length: "Maximum token length for padding and truncation."
+code_description: |
+  This helper builds a `kd.data.py.Tfds` pipeline reading the MTNT dataset. It
+  uses `gm.data.Seq2SeqTask` to create inputs, targets, and loss masks and may
+  reduce batch size to `None` when sampling to generate example outputs.
+relationships:
+  called_by:
+    - get_config
+    - gm.evals.SamplerEvaluator
+  calls:
+    - gm.data.Seq2SeqTask
+    - kd.data.py.Tfds
+note: |
+  `max_length` applies only when not sampling. The dataset is shuffled and
+  repeated for training but iterates once for evaluation.
+output_example: |
+  Returns a dataset pipeline delivering batches with fields `input`, `target`,
+  and `loss_mask` for fine-tuning.

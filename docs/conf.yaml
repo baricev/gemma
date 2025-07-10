@@ -1,0 +1,23 @@
+DocsConfigModule: "Generates Sphinx documentation by invoking apitree on Gemma modules and colab notebooks."
+type: "Module"
+parameters_or_attributes:
+  _COLABS_NAMES: "List of colab notebook identifiers included in the generated docs."
+code_description: |
+  The module imports `apitree` and defines `_COLABS_NAMES` containing the names
+  of example notebooks. It then calls `apitree.make_project` with mappings for
+  Gemma modules and additional files to produce HTML documentation. The call
+  also registers redirections from simple page names to their corresponding
+  notebook pages and exposes variables from the current module to `apitree` via
+  `globals()`.
+relationships:
+  called_by:
+    - None
+  calls:
+    - apitree.make_project
+note: |
+  Run this script from the repository root after installing documentation
+  dependencies using `pip install -e .[docs]`. The output is written under
+  `docs/_build` when executed with `sphinx-build`.
+output_example: |
+  Running `sphinx-build -b html docs/ docs/_build` creates HTML files such as
+  `index.html` and converted colab notebooks like `colab_finetuning.html`.
