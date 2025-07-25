@@ -55,6 +55,14 @@ with _epy.lazy_api_imports(globals()):
   from gemma.gm.nn._modules import FeedForward
   from gemma.gm.nn._modules import AttentionType
 
+  # Functional building blocks
+  from gemma.gm.nn._functional import init_cache
+  from gemma.gm.nn._functional import embed_tokens
+  from gemma.gm.nn._functional import attention
+  from gemma.gm.nn._functional import feed_forward
+  from gemma.gm.nn._functional import block
+  from gemma.gm.nn._funtional_model import Gemma3, Layer, ForwardOutput, transformer_forward
+
   # Model inputs
   from gemma.gm.nn._config import Cache
 
